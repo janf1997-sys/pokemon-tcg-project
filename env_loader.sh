@@ -9,4 +9,8 @@ else
     exit 1
 fi
 
+export PGHOST=${DB_HOST:-$PGHOST}
+export PGDATABASE=${DB_NAME:-$PGDATABASE}
+export PGUSER=${DB_USER:-$PGUSER}
 export PGPASSWORD=${DB_PASSWORD:-$PGPASSWORD}
+export PGPORT=${DB_PORT:-$PGPORT}
