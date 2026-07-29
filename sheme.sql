@@ -23,15 +23,18 @@ CREATE TABLE tcg_sets (
 
 CREATE TABLE card_catalog (
     catalog_id SERIAL PRIMARY KEY,
-    set_id VARCHAR(20) REFERENCES tcg_sets(set_id),
-    pokedex_id INT REFERENCES pokedex(pokedex_id),
+    set_id VARCHAR(20),
+    pokedex_id INT,
     card_name VARCHAR(100) NOT NULL,
     card_number VARCHAR(20) NOT NULL,
-    image_url VARCHAR(255)
+    image_url VARCHAR(255),
+    FOREIGN KEY (set_id) REFERENCES tcg_sets(set_id),
+    FOREIGN KEY (pokedex_id) REFERENCES pokedex(pokedex_id)
 );
 CREATE TABLE my_collection (
     collection_id SERIAL PRIMARY KEY,
-    catalog_id INT REFERENCES card_catalog(catalog_id),
+    catalog_id INT,
     amount INT DEFAULT 1,
-    card_language VARCHAR(10) 
+    card_language VARCHAR(10),
+    FOREIGN KEY (catalog_id) REFERENCES card_catalog(catalog_id) 
 );
