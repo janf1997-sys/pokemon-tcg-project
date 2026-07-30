@@ -1,35 +1,40 @@
+import os
 import re
 import pandas as pd
 import psycopg2
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 
-# --- 1. PostgreSQL Verbindung & Pokedex-Namen laden ---
-print("Verbinde mit PostgreSQL (pokedex_db)...")
+# --- 1. `.env`-Datei laden ---
+load_dotenv()
+
+# --- EINSTELLUNGEN FÜR DES AKTUELLE SET ---
+SET_ID = "SV2a"  # Hier die Set-ID manuell eintragen
+URL = "https://bulbapedia.bulbagarden.net/wiki/Pokemon_Card_151_(TCG)"
+
+
+# --- 2. PostgreSQL Verbindung via ENV-Variablen ---
+print("Verbinde mit PostgreSQL über Umgebungsvariablen...")
 
 try:
     conn = psycopg2.connect(
-        dbname="pokedex_db",
-        user="dev",  # Deinen DB-Benutzer eintragen
-        password="holland13",  # Dein DB-Passwort eintragen
-        host="localhost",  # DB-Host (z.B. localhost oder IP)
-        port="5432",  # Standard-Port für PostgreSQL
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST", "localhost"),  # Fallback auf localhost
+        port=os.getenv("DB_PORT", "5432"),  # Fallback auf 5432
     )
 
     cursor = conn.cursor()
-
-    # PASSE HIER DEINEN TABELLEN- UND SPALTENNAMEN AN:
-    # Beispiel: SELECT name FROM pokemon_species;
     cursor.execute("SELECT pokemon_name FROM pokedex;")
     db_rows = cursor.fetchall()
-
     cursor.close()
     conn.close()
 
-    # Namen in ein Set umwandeln und säubern
     pokedex_names = {row[0].strip().lower() for row in db_rows if row[0]}
     print(
-        f"Erfolg: {len(pokedex_names)} Pokémon-Namen aus 'pokedex_db' geladen.\n"
+        f"Erfolg: {len(pokedex_names)} Pokémon-Namen aus '{os.getenv('DB_NAME')}' geladen.\n"
     )
 
 except Exception as e:
@@ -37,18 +42,13 @@ except Exception as e:
     exit()
 
 
-# --- 2. Hilfsfunktion: Matching gegen deine Pokedex-Liste ---
+# --- 3. Hilfsfunktion: Pokedex-Matching ---
 def match_pokemon_from_pokedex(card_name, pokedex):
     card_name_clean = card_name.lower()
-
-    # Nach Länge sortieren (damit z.B. "Mewtwo" vor "Mew" gematcht wird)
     for pokename in sorted(pokedex, key=len, reverse=True):
         pattern = r"\b" + re.escape(pokename) + r"\b"
         if re.search(pattern, card_name_clean):
-            # Gibt den Namen sauber formatiert im Title Case zurück (z.B. "Charizard")
             return pokename.title()
-
-    # Kein Match (Trainer, Energy etc.) -> leeres Feld
     return ""
 
 
