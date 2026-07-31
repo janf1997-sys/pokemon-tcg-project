@@ -1,7 +1,11 @@
 #!/bin/bash
 
 set -e
-source ./env_loader.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+source "$SCRIPT_DIR/env_loader.sh"
+
+CSV_PATH="$SCRIPT_DIR/../CSV/sets.csv"
 
 echo "Importing TCG sets"
 
@@ -13,7 +17,7 @@ base_set INT,
 master_set INT
 );
 
-\copy temp_tcg_sets FROM './sets.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',');
+\copy temp_tcg_sets FROM '$CSV_PATH' WITH (FORMAT csv, HEADER true, DELIMITER ',');
 
 INSERT INTO tcg_sets (set_id, set_name, base_set, master_set)
 SELECT set_id, set_name, base_set, master_set FROM temp_tcg_sets
